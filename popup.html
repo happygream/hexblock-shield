@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HexBlock Shield</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:    #0f1117;
+  --s1:    #13161f;
+  --s2:    #181c27;
+  --s3:    #1e2333;
+  --line:  #1e2333;
+  --acc:   #00d4aa;
+  --adim:  rgba(0,212,170,0.08);
+  --red:   #e8365d;
+  --rdim:  rgba(232,54,93,0.1);
+  --yel:   #e8a236;
+  --ydim:  rgba(232,162,54,0.1);
+  --blue:  #3d8bff;
+  --bdim:  rgba(61,139,255,0.1);
+  --text:  #c8d4e0;
+  --muted: #3d5060;
+  --muted2:#232b3a;
+  --mono:  'IBM Plex Mono', monospace;
+  --sans:  'IBM Plex Sans', sans-serif;
+}
+
+body {
+  width: 380px;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  font-size: 13px;
+  overflow-x: hidden;
+}
+
+/* Header */
+.hdr {
+  padding: 12px 14px 10px;
+  border-bottom: 1px solid var(--line);
+  display: flex; align-items: center; gap: 9px;
+  background: var(--s1);
+  position: relative;
+}
+.hdr::after {
+  content: '';
+  position: absolute; bottom: -1px; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, var(--acc), transparent 60%);
+  opacity: 0.45;
+}
+.hdr-logo { width: 24px; height: 24px; flex-shrink: 0; }
+.hdr-name { font-family: var(--mono); font-weight: 600; font-size: 13px; flex: 1; }
+.hdr-name span { color: var(--acc); }
+.hdr-ver  { font-family: var(--mono); font-size: 9px; color: var(--muted); }
+.pulse {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--acc); box-shadow: 0 0 6px var(--acc);
+  animation: pulse 2.4s ease-in-out infinite;
+}
+.pulse.off { background: var(--muted2); box-shadow: none; animation: none; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+/* Page URL bar */
+.url-bar {
+  padding: 5px 13px;
+  background: var(--s1);
+  border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: 9px; color: var(--muted);
+  display: flex; align-items: center; gap: 6px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.url-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--muted2); flex-shrink: 0; }
+.url-dot.yt { background: var(--red); }
+
+/* Master toggle */
+.master {
+  margin: 10px 12px;
+  background: var(--s2); border: 1px solid var(--line);
+  padding: 10px 12px;
+  display: flex; align-items: center; gap: 12px;
+  cursor: pointer; position: relative; overflow: hidden;
+  transition: border-color 0.12s;
+}
+.master::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--acc); }
+.master.off::before { background: var(--muted2); }
+.master:hover { border-color: rgba(0,212,170,0.3); }
+.master-icon {
+  width: 34px; height: 34px; border: 1px solid rgba(0,212,170,0.25);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.master.off .master-icon { border-color: var(--muted2); }
+.master-icon svg { width: 15px; height: 15px; color: var(--acc); }
+.master.off .master-icon svg { color: var(--muted); }
+.master-text { flex: 1; }
+.master-label { font-family: var(--mono); font-weight: 600; font-size: 12px; }
+.master-sub   { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 1px; }
+.tog {
+  width: 34px; height: 18px; background: var(--acc);
+  position: relative; flex-shrink: 0; transition: background 0.15s;
+  border: none; cursor: pointer; padding: 0;
+}
+.tog.off { background: var(--muted2); }
+.tog::after {
+  content: ''; position: absolute; top: 2px; left: 2px;
+  width: 14px; height: 14px; background: #0f1117;
+  transition: transform 0.15s;
+}
+.tog:not(.off)::after { transform: translateX(16px); }
+
+/* Stats */
+.stats {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin: 0 12px;
+}
+.sc {
+  padding: 9px 0; text-align: center;
+  border-right: 1px solid var(--line);
+}
+.sc:last-child { border-right: none; }
+.sc-val { font-family: var(--mono); font-weight: 600; font-size: 17px; letter-spacing: -0.5px; line-height: 1; }
+.sc-val.g { color: var(--acc); }
+.sc-val.y { color: var(--yel); }
+.sc-lbl   { font-family: var(--mono); font-size: 8px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 3px; }
+
+/* Tabs */
+.tabs {
+  display: flex; border-bottom: 1px solid var(--line);
+  padding: 0 12px; margin-top: 10px; gap: 0;
+}
+.tab {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted);
+  padding: 7px 10px 6px; cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.1s; user-select: none;
+}
+.tab:hover { color: var(--text); }
+.tab.active { color: var(--acc); border-bottom-color: var(--acc); }
+
+/* Panels */
+.panel { display: none; padding: 10px 12px; }
+.panel.active { display: block; }
+
+/* Section label */
+.slbl {
+  font-family: var(--mono); font-size: 8px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--muted);
+  padding-bottom: 5px; border-bottom: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+
+/* Feature rows */
+.feat-list { display: flex; flex-direction: column; gap: 1px; }
+.feat {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 9px; background: var(--s2);
+  border: 1px solid transparent;
+  transition: border-color 0.1s;
+}
+.feat.on { border-color: rgba(0,212,170,0.14); background: rgba(0,212,170,0.03); }
+.feat-stripe { width: 3px; height: 26px; background: var(--muted2); flex-shrink: 0; transition: background 0.15s; }
+.feat.on .feat-stripe { background: var(--acc); }
+.feat-info { flex: 1; }
+.feat-name { font-family: var(--mono); font-size: 11px; font-weight: 500; }
+.feat-desc { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 1px; }
+.feat-count { font-family: var(--mono); font-size: 10px; color: var(--muted); min-width: 32px; text-align: right; }
+.feat-count.lit { color: var(--acc); }
+.mtog {
+  width: 26px; height: 13px; background: var(--muted2);
+  position: relative; cursor: pointer; flex-shrink: 0;
+  border: none; padding: 0; transition: background 0.15s;
+}
+.mtog.on { background: var(--acc); }
+.mtog::after {
+  content: ''; position: absolute; top: 1px; left: 1px;
+  width: 11px; height: 11px; background: #0f1117;
+  transition: transform 0.15s;
+}
+.mtog.on::after { transform: translateX(13px); }
+
+/* Log */
+.log-wrap {
+  background: #0a0c11; border: 1px solid var(--line);
+  height: 150px; overflow-y: auto;
+  font-family: var(--mono); font-size: 10px;
+}
+.log-wrap::-webkit-scrollbar { width: 3px; }
+.log-wrap::-webkit-scrollbar-thumb { background: var(--line); }
+.lrow {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 8px; border-bottom: 1px solid rgba(30,35,51,0.5);
+}
+.lrow:last-child { border-bottom: none; }
+.ldot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.ldot.b { background: var(--red); box-shadow: 0 0 3px var(--red); }
+.ldot.s { background: var(--acc); box-shadow: 0 0 3px var(--acc); }
+.ldot.a { background: var(--muted2); }
+.ltag {
+  width: 40px; font-size: 8px; letter-spacing: 0.06em; text-transform: uppercase;
+  padding: 1px 3px; text-align: center; flex-shrink: 0;
+}
+.ltag.b { background: var(--rdim); color: var(--red); }
+.ltag.s { background: var(--adim); color: var(--acc); }
+.ltag.a { background: var(--s3);   color: var(--muted); }
+.ldom { flex: 1; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ltime { color: var(--muted); font-size: 9px; flex-shrink: 0; }
+
+/* Settings inputs */
+.set-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 9px; background: var(--s2);
+  border-bottom: 1px solid var(--line);
+}
+.set-row:last-child { border-bottom: none; }
+.set-label { flex: 1; }
+.set-name  { font-family: var(--mono); font-size: 10px; font-weight: 500; }
+.set-hint  { font-family: var(--mono); font-size: 9px; color: var(--muted); margin-top: 1px; }
+.set-input {
+  background: var(--s3); border: 1px solid var(--line);
+  padding: 4px 8px; font-family: var(--mono); font-size: 10px;
+  color: var(--text); width: 130px; outline: none;
+  transition: border-color 0.1s;
+}
+.set-input:focus { border-color: var(--acc); }
+
+/* SponsorBlock tip */
+.sb-tip {
+  font-family: var(--mono); font-size: 9px; color: var(--muted);
+  padding: 6px 9px; background: var(--s2);
+  border-left: 2px solid var(--acc); margin-bottom: 6px;
+  line-height: 1.6; letter-spacing: 0.03em;
+}
+
+/* YouTube stats */
+.yt-stats {
+  display: grid; grid-template-columns: 1fr 1fr 1fr;
+  background: var(--s2); border: 1px solid var(--line);
+  margin-bottom: 6px;
+}
+.yt-sc {
+  padding: 9px 0; text-align: center;
+  border-right: 1px solid var(--line);
+}
+.yt-sc:last-child { border-right: none; }
+.yt-val { font-family: var(--mono); font-weight: 600; font-size: 14px; color: var(--acc); letter-spacing: -0.5px; }
+.yt-lbl { font-family: var(--mono); font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 2px; }
+
+/* Footer */
+.ftr {
+  padding: 7px 12px;
+  border-top: 1px solid var(--line);
+  display: flex; align-items: center; justify-content: space-between;
+  background: var(--s1);
+}
+.ftr-left  { font-family: var(--mono); font-size: 9px; color: var(--muted); letter-spacing: 0.06em; }
+.ftr-link  { font-family: var(--mono); font-size: 9px; color: var(--muted); cursor: pointer; transition: color 0.1s; }
+.ftr-link:hover { color: var(--acc); }
+
+.gap { height: 6px; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="hdr">
+  <svg class="hdr-logo" viewBox="0 0 26 30" fill="none">
+    <path d="M13 1L24.5 7.5V20.5L13 27L1.5 20.5V7.5L13 1Z" stroke="#00d4aa" stroke-width="1.5" fill="rgba(0,212,170,0.06)"/>
+    <path d="M13 7L19 10.5V17.5L13 21L7 17.5V10.5L13 7Z" fill="rgba(0,212,170,0.15)" stroke="#00d4aa" stroke-width="1"/>
+  </svg>
+  <span class="hdr-name">Hex<span>Block</span> Shield</span>
+  <span class="hdr-ver">v1.2.0</span>
+  <div class="pulse" id="hdr-dot"></div>
+</div>
+
+<!-- Current page -->
+<div class="url-bar">
+  <div class="url-dot" id="url-dot"></div>
+  <span id="url-text">Loading...</span>
+</div>
+
+<!-- Master toggle -->
+<div class="master" id="master">
+  <div class="master-icon">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+  </div>
+  <div class="master-text">
+    <div class="master-label" id="master-label">Protection enabled</div>
+    <div class="master-sub"   id="master-sub">All shields active</div>
+  </div>
+  <button class="tog" id="master-tog"></button>
+</div>
+
+<!-- Stats -->
+<div class="stats">
+  <div class="sc"><div class="sc-val g" id="s-blocked">0</div><div class="sc-lbl">Blocked</div></div>
+  <div class="sc"><div class="sc-val y" id="s-skipped">0</div><div class="sc-lbl">Skipped</div></div>
+  <div class="sc"><div class="sc-val"   id="s-saved">0m</div><div class="sc-lbl">Saved</div></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" data-tab="shields">Shields</div>
+  <div class="tab" data-tab="youtube">YouTube</div>
+  <div class="tab" data-tab="twitch">Twitch</div>
+  <div class="tab" data-tab="log">Log</div>
+  <div class="tab" data-tab="settings">Settings</div>
+</div>
+
+<!-- SHIELDS PANEL -->
+<div class="panel active" id="panel-shields">
+  <div class="slbl">Network</div>
+  <div class="feat-list">
+    <div class="feat" id="f-ads">
+      <div class="feat-stripe"></div>
+      <div class="feat-info"><div class="feat-name">Ad blocking</div><div class="feat-desc">EasyList — network level</div></div>
+      <div class="feat-count lit" id="fc-ads">0</div>
+      <button class="mtog" data-key="adBlocking"></button>
+    </div>
+    <div class="feat" id="f-track">
+      <div class="feat-stripe"></div>
+      <div class="feat-info"><div class="feat-name">Tracker blocking</div><div class="feat-desc">EasyPrivacy — fingerprinting and analytics</div></div>
+      <div class="feat-count" id="fc-track">—</div>
+      <button class="mtog" data-key="trackerBlocking"></button>
+    </div>
+    <div class="feat" id="f-mal">
+      <div class="feat-stripe"></div>
+      <div class="feat-info"><div class="feat-name">Malware filter</div><div class="feat-desc">Known phishing and malware domains</div></div>
+      <div class="feat-count">0</div>
+      <button class="mtog" data-key="malwareBlocking"></button>
+    </div>
+  </div>
+  <div class="gap"></div>
+  <div class="slbl">This page</div>
+  <div class="feat-list">
+    <div class="feat" id="f-cosm">
+      <div class="feat-stripe"></div>
+      <div class="feat-info"><div class="feat-name">Cosmetic filtering</div><div class="feat-desc">Hides ad placeholders and cookie banners</div></div>
+      <div class="feat-count">—</div>
+      <button class="mtog" data-key="cosmeticFiltering"></button>
+    </div>
+    <div class="feat" id="f-pause">
+      <div class="feat-stripe"></div>
+      <div class="feat-info"><div class="feat-name">Pause on this site</div><div class="feat-desc">Disable all shields for this domain</div></div>
+      <div class="feat-count">—</div>
+      <button class="mtog" id="pause-tog"></button>
+    </div>
+  </div>
+</div>
+
+<!-- YOUTUBE PANEL -->
+<div class="panel" id="panel-youtube">
+  <div class="sb-tip">
+    YouTube serves ads from the same domains as video content — DNS blocking
+    alone cannot stop them. HexBlock Shield intercepts ad requests in the
+    browser and uses the SponsorBlock API for in-video segments.
+  </div>
+  <div id="skipcut-wrap" style="display:none;margin-bottom:6px;">
+    <button id="skipcut-btn" style="
+      width:100%;padding:9px 12px;
+      background:#ff0000;border:none;cursor:pointer;
+      font-family:var(--mono);font-size:11px;font-weight:600;
+      color:#fff;letter-spacing:0.04em;
+      display:flex;align-items:center;justify-content:center;gap:7px;
+    ">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 7a2.998 2.998 0 0 0-2.12-2.12C15.68 4.5 12 4.5 12 4.5s-3.68 0-5.47.38A2.998 2.998 0 0 0 4.41 7C4 8.79 4 12 4 12s0 3.21.41 5a2.998 2.998 0 0 0 2.12 2.12C8.32 19.5 12 19.5 12 19.5s3.68 0 5.47-.38A2.998 2.998 0 0 0 19.59 17C20 15.21 20 12 20 12s0-3.21-.41-5zM10 15V9l5 3-5 3z"/></svg>
+      Watch Ad-Free on HexBlock
+    </button>
+  </div>
+  <div class="slbl">Ad blocking</div>
+  <div class="feat-list">
+    <div class="feat" id="f-ytads">
+      <div class="feat-stripe"></div>
+      <div class="feat-info"><div class="feat-name">Pre-roll and mid-roll ads</div><div class="feat-desc">Request interception and skip injection</div></div>
+      <button class="mtog" data-key="youtubeAdBlock"></button>
+    </div>
+  </div>
+  <div class="gap"></div>
+  <div class="slbl">SponsorBlock — in-video segments</div>
+  <div class="yt-stats">
+    <div class="yt-sc"><div class="yt-val" id="yt-segs">0</div><div class="yt-lbl">Segments</div></div>
+    <div class="yt-sc"><div class="yt-val" id="yt-time">0m</div><div class="yt-lbl">Saved</div></div>
+    <div class="yt-sc"><div class="yt-val">Free</div><div class="yt-lbl">API</div></div>
+  </div>
+  <div class="feat-list">
+    <div class="feat" id="f-sbs"><div class="feat-stripe"></div><div class="feat-info"><div class="feat-name">Sponsor segments</div></div><button class="mtog" data-key="sbSponsors"></button></div>
+    <div class="feat" id="f-sbi"><div class="feat-stripe"></div><div class="feat-info"><div class="feat-name">Intros and outros</div></div><button class="mtog" data-key="sbIntros"></button></div>
+    <div class="feat" id="f-sbp"><div class="feat-stripe"></div><div class="feat-info"><div class="feat-name">Self-promotion</div></div><button class="mtog" data-key="sbSelfPromo"></button></div>
+    <div class="feat" id="f-sbu"><div class="feat-stripe"></div><div class="feat-info"><div class="feat-name">Subscribe reminders</div></div><button class="mtog" data-key="sbSubscriptions"></button></div>
+    <div class="feat" id="f-sbf"><div class="feat-stripe"></div><div class="feat-info"><div class="feat-name">Filler and off-topic</div></div><button class="mtog" data-key="sbFiller"></button></div>
+  </div>
+  <div style="margin-top:7px;font-family:var(--mono);font-size:9px;color:var(--muted);line-height:1.6;">
+    SponsorBlock — open source, free, privacy-preserving.<br>
+    Only a 4-character hash prefix of the video ID is sent.
+  </div>
+</div>
+
+<!-- TWITCH PANEL -->
+<div class="panel" id="panel-twitch">
+  <div class="sb-tip">
+    Twitch ads run inside the same video stream — DNS blocking cannot
+    stop them. HexBlock Shield intercepts the HLS playlist and strips
+    ad segments before the player loads them.
+  </div>
+  <div class="slbl">Ad blocking</div>
+  <div class="feat-list">
+    <div class="feat" id="f-twitch">
+      <div class="feat-stripe"></div>
+      <div class="feat-info">
+        <div class="feat-name">Twitch stream ad strip</div>
+        <div class="feat-desc">M3U8 playlist intercept — removes ad segments</div>
+      </div>
+      <button class="mtog" data-key="twitchAdBlock"></button>
+    </div>
+  </div>
+  <div class="gap"></div>
+  <div class="slbl">Session stats</div>
+  <div class="yt-stats" id="twitch-stats">
+    <div class="yt-sc"><div class="yt-val" id="tw-strips">0</div><div class="yt-lbl">Stripped</div></div>
+    <div class="yt-sc"><div class="yt-val" id="tw-saved">0s</div><div class="yt-lbl">Saved</div></div>
+    <div class="yt-sc"><div class="yt-val">HLS</div><div class="yt-lbl">Method</div></div>
+  </div>
+  <div style="margin-top:7px;font-family:var(--mono);font-size:9px;color:var(--muted);line-height:1.6;">
+    Strips ad discontinuity blocks from Twitch HLS playlists.<br>
+    Works on live streams and VODs. No proxying — all local.
+  </div>
+</div>
+
+<!-- LOG PANEL -->
+<div class="panel" id="panel-log">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+    <div class="slbl" style="margin-bottom:0;border:none;">Request log — this tab</div>
+    <span style="font-family:var(--mono);font-size:9px;color:var(--muted);cursor:pointer;" id="clear-log">clear</span>
+  </div>
+  <div class="log-wrap" id="log-wrap"></div>
+  <div style="display:flex;gap:5px;margin-top:7px;align-items:center;">
+    <div style="font-family:var(--mono);font-size:8px;background:var(--rdim);color:var(--red);padding:2px 6px;cursor:pointer;" id="lf-b" id="lf-b-btn">blocked</div>
+    <div style="font-family:var(--mono);font-size:8px;background:var(--adim);color:var(--acc);padding:2px 6px;cursor:pointer;"  id="lf-s" id="lf-s-btn">skipped</div>
+    <div style="font-family:var(--mono);font-size:8px;background:var(--s3);  color:var(--muted);padding:2px 6px;cursor:pointer;" id="lf-a" id="lf-a-btn">all</div>
+    <div style="flex:1;"></div>
+    <span style="font-family:var(--mono);font-size:9px;color:var(--muted);" id="log-count"></span>
+  </div>
+</div>
+
+<!-- SETTINGS PANEL -->
+<div class="panel" id="panel-settings">
+  <div class="slbl">Filter lists</div>
+  <div style="background:var(--s2);border:1px solid var(--line);margin-bottom:6px;">
+    <div class="set-row"><div class="set-label"><div class="set-name">EasyList</div><div class="set-hint">186k rules — ads</div></div><span style="font-family:var(--mono);font-size:9px;background:var(--adim);color:var(--acc);padding:2px 6px;">active</span></div>
+    <div class="set-row"><div class="set-label"><div class="set-name">EasyPrivacy</div><div class="set-hint">94k rules — trackers</div></div><span style="font-family:var(--mono);font-size:9px;background:var(--adim);color:var(--acc);padding:2px 6px;">active</span></div>
+    <div class="set-row"><div class="set-label"><div class="set-name">uBlock Annoyances</div><div class="set-hint">Cookie banners</div></div><button class="mtog on" data-key="annoyances"></button></div>
+  </div>
+  <div class="slbl">HexBlock gateway</div>
+  <div style="background:var(--s2);border:1px solid var(--line);margin-bottom:6px;">
+    <div class="set-row"><div class="set-label"><div class="set-name">Gateway URL</div><div class="set-hint">Your self-hosted HexBlock instance</div></div><input class="set-input" id="gw-url" type="url" placeholder="http://hexblock.local:8080"></div>
+    <div class="set-row" style="border-top:1px solid var(--line);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;">
+      <div style="display:flex;align-items:center;gap:8px;">
+        <div id="gw-dot" style="width:7px;height:7px;border-radius:50%;background:var(--line);flex-shrink:0;transition:background .2s;"></div>
+        <span id="gw-status" style="font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.06em;">NOT TESTED</span>
+      </div>
+      <button id="gw-test-btn" style="font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--bg);background:var(--acc);border:none;padding:6px 14px;border-radius:6px;cursor:pointer;min-height:28px;">Test</button>
+    </div>
+    <div class="set-row"><div class="set-label"><div class="set-name">Sync lists from gateway</div><div class="set-hint">Pull blocklists from your server</div></div><button class="mtog" data-key="gatewaySync"></button></div>
+    <div class="set-row"><div class="set-label"><div class="set-name">Report to gateway</div><div class="set-hint">Send block events to dashboard</div></div><button class="mtog" data-key="gatewayReport"></button></div>
+  </div>
+  <div class="slbl">SponsorBlock</div>
+  <div style="background:var(--s2);border:1px solid var(--line);">
+    <div class="set-row"><div class="set-label"><div class="set-name">API endpoint</div><div class="set-hint">Default: sponsor.ajay.app</div></div><input class="set-input" id="sb-api" type="url" placeholder="https://sponsor.ajay.app"></div>
+  </div>
+</div>
+
+<!-- Footer -->
+<div class="ftr">
+  <span class="ftr-left">HexBlock Shield v1.2.0</span>
+  <span class="ftr-link" id="ftr-settings">Settings</span>
+</div>
+
+<script src="src/popup.js"></script>
+</body>
+</html>

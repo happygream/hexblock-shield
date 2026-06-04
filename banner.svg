@@ -1,0 +1,131 @@
+<svg width="900" height="200" viewBox="0 0 900 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      .bg { fill: #080a10; }
+      .border { fill: none; stroke: #1c2535; stroke-width: 1; }
+      .accent { fill: #00e8c0; }
+      .accent-stroke { fill: none; stroke: #00e8c0; stroke-width: 1.5; }
+      .accent-dim { fill: none; stroke: rgba(0,232,192,0.2); stroke-width: 1; }
+      .mono { font-family: 'JetBrains Mono', 'Courier New', monospace; }
+      .t1 { fill: #edf4fb; }
+      .t2 { fill: #8aafc8; }
+      .t3 { fill: #3d5a72; }
+      .tg { fill: #00e8c0; }
+    </style>
+
+    <!-- Scanline pattern -->
+    <pattern id="scan" x="0" y="0" width="1" height="4" patternUnits="userSpaceOnUse">
+      <rect width="1" height="1" fill="rgba(0,0,0,0.15)"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="900" height="200" class="bg"/>
+
+  <!-- Subtle grid lines -->
+  <line x1="0" y1="58" x2="900" y2="58" stroke="#1c2535" stroke-width="0.5"/>
+  <line x1="220" y1="0" x2="220" y2="180" stroke="#1c2535" stroke-width="0.5"/>
+
+  <!-- Left accent bar -->
+  <rect x="0" y="0" width="3" height="200" fill="#00e8c0"/>
+
+  <!-- Hex logo mark -->
+  <g transform="translate(32, 18)">
+    <polygon points="22,2 40,12 40,32 22,42 4,32 4,12" fill="rgba(0,232,192,0.07)" stroke="#00e8c0" stroke-width="1.5" stroke-linejoin="round"/>
+    <polygon points="22,10 33,16.5 33,29.5 22,36 11,29.5 11,16.5" fill="rgba(0,232,192,0.18)" stroke="#00e8c0" stroke-width="1"/>
+
+    <!-- Animated pulse on hex -->
+    <polygon points="22,2 40,12 40,32 22,42 4,32 4,12" fill="none" stroke="#00e8c0" stroke-width="1.5" stroke-linejoin="round" opacity="0">
+      <animate attributeName="opacity" values="0;0.6;0" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+      <animate attributeName="stroke-width" values="1.5;4;1.5" dur="3s" repeatCount="indefinite" begin="0.5s"/>
+    </polygon>
+  </g>
+
+  <!-- Name -->
+  <text x="88" y="36" class="mono t1" font-size="22" font-weight="700" letter-spacing="-0.3">Hex<tspan fill="#00e8c0">Block</tspan> Shield</text>
+  <text x="88" y="54" class="mono t3" font-size="10" letter-spacing="1.5">BROWSER EXTENSION  ·  MV3  ·  OPEN SOURCE</text>
+
+  <!-- Animated typing cursor on tagline -->
+  <text x="88" y="76" class="mono t2" font-size="11" letter-spacing="0.3">Blocks ads. Strips Twitch streams. Skips sponsors.</text>
+
+  <!-- Stats row -->
+  <g transform="translate(16, 98)">
+    <!-- Stat 1 -->
+    <rect x="0" y="0" width="140" height="52" rx="6" fill="#0d1018" stroke="#1c2535" stroke-width="1"/>
+    <rect x="0" y="0" width="140" height="2" rx="1" fill="#00e8c0"/>
+    <text x="12" y="22" class="mono tg" font-size="20" font-weight="500">3,000+</text>
+    <text x="12" y="38" class="mono t3" font-size="9" letter-spacing="1">AD RULES</text>
+
+    <!-- Stat 2 -->
+    <rect x="152" y="0" width="140" height="52" rx="6" fill="#0d1018" stroke="#1c2535" stroke-width="1"/>
+    <rect x="152" y="0" width="140" height="2" rx="1" fill="#00e8c0">
+      <animate attributeName="width" values="0;140;140" dur="1.2s" fill="freeze" begin="0.3s"/>
+    </rect>
+    <text x="164" y="22" class="mono tg" font-size="20" font-weight="500">YouTube</text>
+    <text x="164" y="38" class="mono t3" font-size="9" letter-spacing="1">AD SKIP + SPONSORBLOCK</text>
+
+    <!-- Stat 3 -->
+    <rect x="304" y="0" width="140" height="52" rx="6" fill="#0d1018" stroke="#1c2535" stroke-width="1"/>
+    <rect x="304" y="0" width="140" height="2" rx="1" fill="#00e8c0">
+      <animate attributeName="width" values="0;140;140" dur="1.2s" fill="freeze" begin="0.6s"/>
+    </rect>
+    <text x="316" y="22" class="mono tg" font-size="20" font-weight="500">Twitch</text>
+    <text x="316" y="38" class="mono t3" font-size="9" letter-spacing="1">HLS AD STRIP</text>
+
+    <!-- Stat 4 -->
+    <rect x="456" y="0" width="140" height="52" rx="6" fill="#0d1018" stroke="#1c2535" stroke-width="1"/>
+    <rect x="456" y="0" width="140" height="2" rx="1" fill="#00e8c0">
+      <animate attributeName="width" values="0;140;140" dur="1.2s" fill="freeze" begin="0.9s"/>
+    </rect>
+    <text x="468" y="22" class="mono tg" font-size="20" font-weight="500">MV3</text>
+    <text x="468" y="38" class="mono t3" font-size="9" letter-spacing="1">MANIFEST V3</text>
+  </g>
+
+  <!-- Right side — terminal block -->
+  <g transform="translate(640, 16)">
+    <rect x="0" y="0" width="244" height="148" rx="8" fill="#080a10" stroke="#1c2535" stroke-width="1"/>
+    <!-- Terminal bar -->
+    <rect x="0" y="0" width="244" height="24" rx="8" fill="#0d1018"/>
+    <rect x="0" y="12" width="244" height="12" fill="#0d1018"/>
+    <circle cx="16" cy="12" r="4" fill="#ff5f57"/>
+    <circle cx="30" cy="12" r="4" fill="#febc2e"/>
+    <circle cx="44" cy="12" r="4" fill="#28c840"/>
+    <text x="88" y="16" class="mono t3" font-size="9" text-anchor="middle" letter-spacing="0.5">hls.twitchapps.com</text>
+
+    <!-- Terminal content lines -->
+    <text x="12" y="44" class="mono t3" font-size="9">$ intercepting M3U8 playlist...</text>
+    <text x="12" y="60" class="mono" font-size="9" fill="#3d5a72">  scanning for ad markers</text>
+
+    <!-- Animated blocked line -->
+    <text x="12" y="76" class="mono" font-size="9" fill="#ff4d6d" opacity="0">
+      ✕ #EXT-X-DISCONTINUITY [ad]
+      <animate attributeName="opacity" values="0;1;1" dur="0.3s" fill="freeze" begin="1.0s"/>
+    </text>
+    <text x="12" y="92" class="mono" font-size="9" fill="#ff4d6d" opacity="0">
+      ✕ stitched-ad segment stripped
+      <animate attributeName="opacity" values="0;1;1" dur="0.3s" fill="freeze" begin="1.4s"/>
+    </text>
+    <text x="12" y="108" class="mono tg" font-size="9" opacity="0">
+      ✓ clean playlist returned
+      <animate attributeName="opacity" values="0;1;1" dur="0.3s" fill="freeze" begin="1.8s"/>
+    </text>
+    <text x="12" y="124" class="mono t3" font-size="9" opacity="0">
+      ─ 2 ad segments removed · 0ms
+      <animate attributeName="opacity" values="0;1;1" dur="0.3s" fill="freeze" begin="2.2s"/>
+    </text>
+
+    <!-- Blinking cursor -->
+    <rect x="12" y="133" width="6" height="10" fill="#00e8c0" opacity="0">
+      <animate attributeName="opacity" values="0;0;1;1;0;0" dur="1s" repeatCount="indefinite" begin="2.5s"/>
+    </rect>
+  </g>
+
+  <!-- Scanline overlay -->
+  <rect width="900" height="200" fill="url(#scan)" opacity="0.4"/>
+
+  <!-- Bottom border accent -->
+  <line x1="0" y1="199" x2="900" y2="199" stroke="#1c2535" stroke-width="1"/>
+  <line x1="0" y1="199" x2="120" y2="199" stroke="#00e8c0" stroke-width="1">
+    <animate attributeName="x2" values="0;900" dur="2s" fill="freeze"/>
+  </line>
+</svg>
