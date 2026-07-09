@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/hexblock-shield/bmjflnnopehafhmelobgbjeobdhokifj"><img src="https://img.shields.io/badge/Chrome-Web%20Store-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Web Store"/></a>
+  <img src="https://img.shields.io/badge/Chrome%20Web%20Store-pending%20review-4285F4?style=flat-square&logo=googlechrome&logoColor=white" alt="Chrome Web Store — pending review"/>
   <a href="https://github.com/happygream/hexblock-shield/releases"><img src="https://img.shields.io/github/v/release/happygream/hexblock-shield?style=flat-square&color=00e8c0&label=version" alt="Version"/></a>
   <img src="https://img.shields.io/badge/manifest-v3-00e8c0?style=flat-square" alt="MV3"/>
   <img src="https://img.shields.io/badge/license-MIT-3d5a72?style=flat-square" alt="MIT"/>
@@ -28,7 +28,7 @@ Browser extension for the [HexBlock](https://hexblock.co.uk) privacy gateway. Bl
 
 | Browser | Store |
 |---------|-------|
-| Chrome | [Chrome Web Store](https://chromewebstore.google.com/detail/hexblock-shield/bmjflnnopehafhmelobgbjeobdhokifj) |
+| Chrome | Chrome Web Store — submitted, pending review |
 | Firefox | Firefox Add-ons — submission pending |
 | Edge | Microsoft Edge Add-ons — submission pending |
 
@@ -95,7 +95,8 @@ Configure the gateway URL in the Settings tab of the extension popup.
 | `declarativeNetRequest` | Block ad and tracker requests |
 | `tabs` | Read current tab URL for the popup |
 | `scripting` | Inject content scripts dynamically |
-| `<all_urls>` | Apply cosmetic filtering on all pages |
+| `management` | Detect other installed ad blockers to avoid duplicate/conflicting rules |
+| `<all_urls>` | Apply ad/tracker blocking and cosmetic filtering on all pages, and support the optional self-hosted gateway (any URL) |
 
 ## License
 
