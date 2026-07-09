@@ -3,7 +3,7 @@
   "name": "HexBlock Shield",
   "version": "1.2.1",
   "version_name": "1.2.1",
-  "description": "Ad and tracker blocking for every site. YouTube ad skipping, SponsorBlock, and Twitch stream ad removal. Connects to your self-hosted HexBlock privacy gateway.",
+  "description": "Ad and tracker blocking. YouTube ad skip, SponsorBlock, and Twitch ad removal. Connects to your HexBlock gateway.",
   "permissions": [
     "storage",
     "declarativeNetRequest",
