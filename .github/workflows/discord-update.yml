@@ -18,22 +18,37 @@ jobs:
           set -euo pipefail
           EVENT="${{ github.event_name }}"
           REPO="${{ github.repository }}"
+          REPONAME="${{ github.event.repository.name }}"
           ACTOR="${{ github.actor }}"
+          BRANCH="${{ github.ref_name }}"
+          COLOR=1975599
           if [ "$EVENT" = "release" ]; then
-            TITLE="🚀 Release: ${{ github.event.release.tag_name }}"
+            TITLE="${{ github.event.release.tag_name }}"
             URL="${{ github.event.release.html_url }}"
-            DESC=$(echo "${{ github.event.release.body }}" | head -c 1500)
+            DESC=$(echo "${{ github.event.release.body }}" | head -c 2000)
+            FIELDS='[]'
           elif [ "$EVENT" = "create" ] && [ "${{ github.event.ref_type }}" = "tag" ]; then
-            TITLE="🏷️ New tag: ${{ github.event.ref }}"
+            TITLE="${{ github.event.ref }}"
             URL="https://github.com/$REPO/releases/tag/${{ github.event.ref }}"
             DESC=""
+            FIELDS='[]'
           else
-            TITLE="📦 Push to ${{ github.ref_name }}"
-            URL="${{ github.event.head_commit.url }}"
-            DESC=$(echo "${{ github.event.head_commit.message }}" | head -c 1500)
+            SHA="${{ github.event.head_commit.id }}"; SHORT="${SHA:0:7}"
+            TITLE=$(echo "${{ github.event.head_commit.message }}" | head -1 | head -c 256)
+            URL="${{ github.event.head_commit.url }}"; DESC=""
+            NADD=$(echo '${{ toJSON(github.event.head_commit.added) }}' | jq 'length')
+            NMOD=$(echo '${{ toJSON(github.event.head_commit.modified) }}' | jq 'length')
+            NREM=$(echo '${{ toJSON(github.event.head_commit.removed) }}' | jq 'length')
+            FIELDS=$(jq -n --arg branch "$BRANCH" --arg commit "[$SHORT]($URL)" \
+              --arg files "$NADD added, $NMOD changed, $NREM removed" \
+              '[{name:"branch",value:$branch,inline:true},
+                {name:"commit",value:$commit,inline:true},
+                {name:"files",value:$files,inline:true}]')
           fi
           jq -n --arg title "$TITLE" --arg url "$URL" --arg desc "$DESC" \
-                --arg repo "$REPO" --arg actor "$ACTOR" \
-            '{embeds:[{title:$title,url:$url,description:$desc,
-              author:{name:$repo},footer:{text:("by "+$actor)},color:3066993}]}' \
+                --arg repo "$REPO" --arg reponame "$REPONAME" \
+                --argjson color "$COLOR" --argjson fields "$FIELDS" \
+            '{embeds:[{author:{name:$reponame,url:("https://github.com/"+$repo)},
+              title:$title,url:$url,description:$desc,color:$color,fields:$fields,
+              footer:{text:$repo},timestamp:(now|todateiso8601)}]}' \
           | curl -sf -H "Content-Type: application/json" -d @- "$WEBHOOK"
