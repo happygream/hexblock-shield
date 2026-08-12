@@ -1,0 +1,39 @@
+name: Discord Update
+on:
+  push:
+    branches: ["**"]
+  release:
+    types: [published]
+  create:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'push' || github.event.head_commit != null
+    steps:
+      - name: Post to Discord
+        env:
+          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        run: |
+          set -euo pipefail
+          EVENT="${{ github.event_name }}"
+          REPO="${{ github.repository }}"
+          ACTOR="${{ github.actor }}"
+          if [ "$EVENT" = "release" ]; then
+            TITLE="🚀 Release: ${{ github.event.release.tag_name }}"
+            URL="${{ github.event.release.html_url }}"
+            DESC=$(echo "${{ github.event.release.body }}" | head -c 1500)
+          elif [ "$EVENT" = "create" ] && [ "${{ github.event.ref_type }}" = "tag" ]; then
+            TITLE="🏷️ New tag: ${{ github.event.ref }}"
+            URL="https://github.com/$REPO/releases/tag/${{ github.event.ref }}"
+            DESC=""
+          else
+            TITLE="📦 Push to ${{ github.ref_name }}"
+            URL="${{ github.event.head_commit.url }}"
+            DESC=$(echo "${{ github.event.head_commit.message }}" | head -c 1500)
+          fi
+          jq -n --arg title "$TITLE" --arg url "$URL" --arg desc "$DESC" \
+                --arg repo "$REPO" --arg actor "$ACTOR" \
+            '{embeds:[{title:$title,url:$url,description:$desc,
+              author:{name:$repo},footer:{text:("by "+$actor)},color:3066993}]}' \
+          | curl -sf -H "Content-Type: application/json" -d @- "$WEBHOOK"
