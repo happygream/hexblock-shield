@@ -19,36 +19,70 @@ jobs:
           EVENT="${{ github.event_name }}"
           REPO="${{ github.repository }}"
           REPONAME="${{ github.event.repository.name }}"
+          ABOUT=$(echo "${{ github.event.repository.description }}" | head -c 300)
+          [ -z "$ABOUT" ] && ABOUT="_no description set_"
+          HOMEPAGE="${{ github.event.repository.homepage }}"
+          LANG="${{ github.event.repository.language }}"
           ACTOR="${{ github.actor }}"
+          AVATAR="https://github.com/${ACTOR}.png?size=64"
           BRANCH="${{ github.ref_name }}"
           COLOR=1975599
+
           if [ "$EVENT" = "release" ]; then
-            TITLE="${{ github.event.release.tag_name }}"
+            TITLE="Release ${{ github.event.release.tag_name }}"
             URL="${{ github.event.release.html_url }}"
-            DESC=$(echo "${{ github.event.release.body }}" | head -c 2000)
-            FIELDS='[]'
+            BODY=$(echo "${{ github.event.release.body }}" | head -c 1500)
+            EXTRA='[]'
           elif [ "$EVENT" = "create" ] && [ "${{ github.event.ref_type }}" = "tag" ]; then
-            TITLE="${{ github.event.ref }}"
+            TITLE="Tagged ${{ github.event.ref }}"
             URL="https://github.com/$REPO/releases/tag/${{ github.event.ref }}"
-            DESC=""
-            FIELDS='[]'
+            BODY=""
+            EXTRA='[]'
           else
             SHA="${{ github.event.head_commit.id }}"; SHORT="${SHA:0:7}"
-            TITLE=$(echo "${{ github.event.head_commit.message }}" | head -1 | head -c 256)
-            URL="${{ github.event.head_commit.url }}"; DESC=""
+            TITLE=$(echo "${{ github.event.head_commit.message }}" | head -1 | head -c 200)
+            URL="${{ github.event.head_commit.url }}"; BODY=""
             NADD=$(echo '${{ toJSON(github.event.head_commit.added) }}' | jq 'length')
             NMOD=$(echo '${{ toJSON(github.event.head_commit.modified) }}' | jq 'length')
             NREM=$(echo '${{ toJSON(github.event.head_commit.removed) }}' | jq 'length')
-            FIELDS=$(jq -n --arg branch "$BRANCH" --arg commit "[$SHORT]($URL)" \
-              --arg files "$NADD added, $NMOD changed, $NREM removed" \
-              '[{name:"branch",value:$branch,inline:true},
-                {name:"commit",value:$commit,inline:true},
-                {name:"files",value:$files,inline:true}]')
+            TOTAL=$((NADD+NMOD+NREM))
+            EXTRA=$(jq -n --arg branch "$BRANCH" --arg commit "[\`$SHORT\`]($URL)" \
+              --arg changes "+$NADD ~$NMOD -$NREM ($TOTAL files)" \
+              '[{name:"Branch",value:$branch,inline:true},
+                {name:"Commit",value:$commit,inline:true},
+                {name:"Changes",value:$changes,inline:true}]')
           fi
-          jq -n --arg title "$TITLE" --arg url "$URL" --arg desc "$DESC" \
-                --arg repo "$REPO" --arg reponame "$REPONAME" \
-                --argjson color "$COLOR" --argjson fields "$FIELDS" \
-            '{embeds:[{author:{name:$reponame,url:("https://github.com/"+$repo)},
-              title:$title,url:$url,description:$desc,color:$color,fields:$fields,
-              footer:{text:$repo},timestamp:(now|todateiso8601)}]}' \
+
+          DESC="$ABOUT"
+          [ -n "$BODY" ] && DESC="$ABOUT
+
+          $BODY"
+
+          META=""
+          [ -n "$LANG" ] && META="$LANG"
+          [ -n "$HOMEPAGE" ] && META="$META  •  [site]($HOMEPAGE)"
+
+          jq -n \
+            --arg title "$TITLE" \
+            --arg url "$URL" \
+            --arg desc "$DESC" \
+            --arg repo "$REPO" \
+            --arg reponame "$REPONAME" \
+            --arg avatar "$AVATAR" \
+            --arg meta "$META" \
+            --argjson color "$COLOR" \
+            --argjson extra "$EXTRA" \
+            '{
+              embeds: [ {
+                author: {name: $reponame, url: ("https://github.com/" + $repo), icon_url: $avatar},
+                title: $title,
+                url: $url,
+                description: $desc,
+                color: $color,
+                fields: $extra,
+                thumbnail: {url: $avatar},
+                footer: {text: ($repo + (if $meta != "" then "  —  " + $meta else "" end))},
+                timestamp: (now | todateiso8601)
+              } ]
+            }' \
           | curl -sf -H "Content-Type: application/json" -d @- "$WEBHOOK"
