@@ -1,0 +1,16 @@
+{
+  "name": "hexblock-shield",
+  "version": "1.0.0",
+  "description": "HexBlock Shield browser extension",
+  "private": true,
+  "scripts": {
+    "build:lists": "node scripts/build-lists.js",
+    "lint": "eslint src/ --ext .js"
+  },
+  "devDependencies": {
+    "eslint": "^8.57.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
