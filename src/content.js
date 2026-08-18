@@ -141,29 +141,56 @@ async function injectWatchBanner() {
     transition: transform 0.3s ease; pointer-events: all;
   `;
 
-  banner.innerHTML = `
-    <svg width="14" height="14" viewBox="0 0 40 46" fill="none" style="flex-shrink:0;">
-      <path d="M20 2L37 11.5V30.5L20 40L3 30.5V11.5L20 2Z" stroke="#00e5b8" stroke-width="2.5" fill="rgba(0,229,184,0.07)"/>
-    </svg>
-    <span style="color:#3d5568;">Watch this video ad-free on</span>
-    <span style="color:#00e5b8;font-weight:600;">HexBlock</span>
-    <a href="https://hexblock.co.uk/watch?v=${videoId}" target="_blank" style="
-      display:inline-flex;align-items:center;gap:6px;
-      background:#00e5b8;color:#050709;
-      font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
-      padding:6px 14px;text-decoration:none;
-      clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
-      transition:background 0.1s;
-    " onmouseover="this.style.background='#00c9a0'" onmouseout="this.style.background='#00e5b8'">
-      Watch free
-    </a>
-    <button id="hb-banner-close" style="
-      background:none;border:none;color:#3d5568;cursor:pointer;
-      font-size:16px;padding:0 4px;line-height:1;margin-left:8px;
-    ">×</button>
+  // Validate videoId against YouTube's known format before using it anywhere.
+  // YouTube IDs are exactly 11 chars from [A-Za-z0-9_-]. Anything else is
+  // discarded — this prevents any markup/attribute injection via the URL.
+  if (!/^[A-Za-z0-9_-]{11}$/.test(videoId)) return;
+
+  // Build with DOM APIs (no innerHTML) so nothing from the URL is parsed as HTML.
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const logo = document.createElementNS(svgNS, 'svg');
+  logo.setAttribute('width', '14'); logo.setAttribute('height', '14');
+  logo.setAttribute('viewBox', '0 0 40 46'); logo.setAttribute('fill', 'none');
+  logo.style.flexShrink = '0';
+  const logoPath = document.createElementNS(svgNS, 'path');
+  logoPath.setAttribute('d', 'M20 2L37 11.5V30.5L20 40L3 30.5V11.5L20 2Z');
+  logoPath.setAttribute('stroke', '#00e5b8'); logoPath.setAttribute('stroke-width', '2.5');
+  logoPath.setAttribute('fill', 'rgba(0,229,184,0.07)');
+  logo.appendChild(logoPath);
+
+  const lead = document.createElement('span');
+  lead.style.color = '#3d5568';
+  lead.textContent = 'Watch this video ad-free on';
+
+  const brand = document.createElement('span');
+  brand.style.cssText = 'color:#00e5b8;font-weight:600;';
+  brand.textContent = 'HexBlock';
+
+  const link = document.createElement('a');
+  link.href = 'https://hexblock.co.uk/watch?v=' + encodeURIComponent(videoId);
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  link.textContent = 'Watch free';
+  link.style.cssText = `
+    display:inline-flex;align-items:center;gap:6px;
+    background:#00e5b8;color:#050709;
+    font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;
+    padding:6px 14px;text-decoration:none;
+    clip-path:polygon(6px 0%,100% 0%,calc(100% - 6px) 100%,0% 100%);
+    transition:background 0.1s;
+  `;
+  link.addEventListener('mouseover', () => { link.style.background = '#00c9a0'; });
+  link.addEventListener('mouseout',  () => { link.style.background = '#00e5b8'; });
+
+  const closeBtn = document.createElement('button');
+  closeBtn.id = 'hb-banner-close';
+  closeBtn.textContent = '\u00d7';
+  closeBtn.style.cssText = `
+    background:none;border:none;color:#3d5568;cursor:pointer;
+    font-size:16px;padding:0 4px;line-height:1;margin-left:8px;
   `;
 
-  document.body.appendChild(banner);
+  banner.append(logo, lead, brand, link, closeBtn);
   // Animate in
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {

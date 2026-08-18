@@ -4,7 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HexBlock Shield</title>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<!-- Fonts are resolved from the system stack (see :root --mono / --sans).
+     No external font request is made, so the popup phones no third party. -->
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -25,8 +26,8 @@
   --text:  #c8d4e0;
   --muted: #3d5060;
   --muted2:#232b3a;
-  --mono:  'IBM Plex Mono', monospace;
-  --sans:  'IBM Plex Sans', sans-serif;
+  --mono:  ui-monospace, 'IBM Plex Mono', 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
+  --sans:  'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
 }
 
 body {
@@ -64,6 +65,33 @@ body {
 }
 .pulse.off { background: var(--muted2); box-shadow: none; animation: none; }
 @keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.3;} }
+
+/* Update banner */
+.upd {
+  margin: 10px 12px 0;
+  background: var(--adim);
+  border: 1px solid rgba(0,212,170,0.3);
+  border-left: 2px solid var(--acc);
+  padding: 9px 11px;
+  display: none;
+  position: relative;
+}
+.upd.show { display: block; }
+.upd-top { display: flex; align-items: center; gap: 7px; margin-bottom: 5px; }
+.upd-tag {
+  font-family: var(--mono); font-size: 8px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--acc); background: rgba(0,212,170,0.12);
+  padding: 2px 6px;
+}
+.upd-ver { font-family: var(--mono); font-size: 9px; color: var(--muted); }
+.upd-x {
+  margin-left: auto; background: none; border: none; cursor: pointer;
+  color: var(--muted); font-family: var(--mono); font-size: 13px;
+  line-height: 1; padding: 0 2px;
+}
+.upd-x:hover { color: var(--text); }
+.upd-note { font-size: 11px; line-height: 1.5; color: var(--text); }
 
 /* Page URL bar */
 .url-bar {
@@ -275,7 +303,7 @@ body {
     <path d="M13 7L19 10.5V17.5L13 21L7 17.5V10.5L13 7Z" fill="rgba(0,212,170,0.15)" stroke="#00d4aa" stroke-width="1"/>
   </svg>
   <span class="hdr-name">Hex<span>Block</span> Shield</span>
-  <span class="hdr-ver">v1.2.1</span>
+  <span class="hdr-ver" id="hdr-ver"></span>
   <div class="pulse" id="hdr-dot"></div>
 </div>
 
@@ -283,6 +311,16 @@ body {
 <div class="url-bar">
   <div class="url-dot" id="url-dot"></div>
   <span id="url-text">Loading...</span>
+</div>
+
+<!-- Update banner (shown once after an update) -->
+<div class="upd" id="upd-banner">
+  <div class="upd-top">
+    <span class="upd-tag">Updated</span>
+    <span class="upd-ver" id="upd-ver"></span>
+    <button class="upd-x" id="upd-dismiss" aria-label="Dismiss">&times;</button>
+  </div>
+  <div class="upd-note" id="upd-note"></div>
 </div>
 
 <!-- Master toggle -->
@@ -479,7 +517,7 @@ body {
 
 <!-- Footer -->
 <div class="ftr">
-  <span class="ftr-left">HexBlock Shield v1.2.1</span>
+  <span class="ftr-left" id="ftr-ver">HexBlock Shield</span>
   <span class="ftr-link" id="ftr-settings">Settings</span>
 </div>
 

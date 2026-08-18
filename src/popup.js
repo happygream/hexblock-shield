@@ -15,6 +15,14 @@ document.addEventListener('DOMContentLoaded', async () => {
   currentTab = await getCurrentTab();
   settings   = await msg({ type: 'GET_SETTINGS' });
 
+  // Single source of truth for the version — read from the manifest so the
+  // header and footer can never drift out of sync with manifest.json again.
+  const ver = chrome.runtime.getManifest().version;
+  const hv = document.getElementById('hdr-ver');
+  const fv = document.getElementById('ftr-ver');
+  if (hv) hv.textContent = 'v' + ver;
+  if (fv) fv.textContent = 'HexBlock Shield v' + ver;
+
   setUrlBar(currentTab?.url || '');
   applySettings();
   loadStats();
@@ -26,8 +34,29 @@ document.addEventListener('DOMContentLoaded', async () => {
   bindLogFilters();
   bindPauseSite();
   bindSkipCut();
+  checkUpdateNotice();
   startPoll();
 });
+
+// ── Update notice ────────────────────────────────────────────
+
+async function checkUpdateNotice() {
+  try {
+    const { notice } = await msg({ type: 'GET_UPDATE_NOTICE' });
+    if (!notice) return;
+    const banner = document.getElementById('upd-banner');
+    const verEl  = document.getElementById('upd-ver');
+    const noteEl = document.getElementById('upd-note');
+    if (!banner) return;
+    verEl.textContent  = 'v' + notice.version;
+    noteEl.textContent = notice.note || 'Extension updated.';
+    banner.classList.add('show');
+    document.getElementById('upd-dismiss')?.addEventListener('click', async () => {
+      banner.classList.remove('show');
+      await msg({ type: 'DISMISS_UPDATE_NOTICE' });
+    });
+  } catch (_) {}
+}
 
 // ── Tab info ─────────────────────────────────────────────────
 
@@ -352,7 +381,9 @@ function esc(s) {
   return String(s)
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;');
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function timeAgo(ts) {

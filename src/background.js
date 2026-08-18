@@ -30,7 +30,7 @@ async function checkForOtherBlockers() {
     if (hasOtherBlocker) {
       console.log('HexBlock Shield: other ad blocker detected — disabling duplicate rules');
       await chrome.declarativeNetRequest.updateEnabledRulesets({
-        disableRulesetIds: ['easylist', 'easyprivacy'],
+        disableRulesetIds: ['filters'],
         enableRulesetIds:  [],
       }).catch(() => {});
     }
@@ -61,6 +61,28 @@ chrome.runtime.onInstalled.addListener(async (details) => {
       gatewayReport:     false,
       sbApiEndpoint:     'https://sponsor.ajay.app',
     });
+  }
+
+  // On update, record the new version and a short "what's new" note so the
+  // popup can surface a one-time, dismissible banner to the user.
+  if (details.reason === 'update') {
+    const version = chrome.runtime.getManifest().version;
+    if (version !== details.previousVersion) {
+      await chrome.storage.local.set({
+        hb_update_notice: {
+          version,
+          previousVersion: details.previousVersion || null,
+          note: 'Fixed sites being blocked by mistake — full pages and embeds (videos, comments, payment frames) now load correctly while ads stay blocked.',
+          ts: Date.now(),
+          seen: false,
+        },
+      });
+      // Badge cue so the user notices there's something new in the popup.
+      try {
+        await chrome.action.setBadgeText({ text: 'NEW' });
+        await chrome.action.setBadgeBackgroundColor({ color: '#00d4aa' });
+      } catch (_) {}
+    }
   }
   checkForOtherBlockers();
 });
@@ -114,6 +136,25 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
         sendResponse({ sites: res['hb_paused_sites'] || [] });
       });
       return true;
+
+    case 'GET_UPDATE_NOTICE':
+      chrome.storage.local.get('hb_update_notice').then(res => {
+        const notice = res['hb_update_notice'];
+        sendResponse({ notice: (notice && !notice.seen) ? notice : null });
+      });
+      return true;
+
+    case 'DISMISS_UPDATE_NOTICE':
+      chrome.storage.local.get('hb_update_notice').then(async (res) => {
+        const notice = res['hb_update_notice'];
+        if (notice) {
+          notice.seen = true;
+          await chrome.storage.local.set({ hb_update_notice: notice });
+        }
+        try { await chrome.action.setBadgeText({ text: '' }); } catch (_) {}
+        sendResponse({ ok: true });
+      });
+      return true;
   }
 });
 
@@ -122,11 +163,13 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 async function applySettings(settings) {
   const updates = [];
 
-  if ('adBlocking' in settings) {
-    updates.push({ rulesetId: 'easylist', action: settings.adBlocking ? 'enable' : 'disable' });
-  }
-  if ('trackerBlocking' in settings) {
-    updates.push({ rulesetId: 'easyprivacy', action: settings.trackerBlocking ? 'enable' : 'disable' });
+  // ad and tracker blocking are now served by a single curated "filters"
+  // ruleset. Keep it enabled if either protection is on.
+  if ('adBlocking' in settings || 'trackerBlocking' in settings) {
+    const cur = await getSettings();
+    const adOn      = ('adBlocking'      in settings) ? settings.adBlocking      : cur.adBlocking;
+    const trackerOn = ('trackerBlocking' in settings) ? settings.trackerBlocking : cur.trackerBlocking;
+    updates.push({ rulesetId: 'filters', action: (adOn || trackerOn) ? 'enable' : 'disable' });
   }
   if ('youtubeAdBlock' in settings) {
     updates.push({ rulesetId: 'youtube_ads', action: settings.youtubeAdBlock ? 'enable' : 'disable' });
