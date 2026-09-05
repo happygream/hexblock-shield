@@ -20,13 +20,14 @@ jobs:
           REPO="${{ github.repository }}"
           REPONAME="${{ github.event.repository.name }}"
           ABOUT=$(echo "${{ github.event.repository.description }}" | head -c 300)
-          [ -z "$ABOUT" ] && ABOUT="_no description set_"
           HOMEPAGE="${{ github.event.repository.homepage }}"
           LANG="${{ github.event.repository.language }}"
+          DEFBRANCH="${{ github.event.repository.default_branch }}"
           ACTOR="${{ github.actor }}"
-          AVATAR="https://github.com/${ACTOR}.png?size=64"
           BRANCH="${{ github.ref_name }}"
           COLOR=1975599
+
+          THUMB="https://raw.githubusercontent.com/$REPO/$DEFBRANCH/.github/logo.png"
 
           if [ "$EVENT" = "release" ]; then
             TITLE="Release ${{ github.event.release.tag_name }}"
@@ -46,11 +47,17 @@ jobs:
             NMOD=$(echo '${{ toJSON(github.event.head_commit.modified) }}' | jq 'length')
             NREM=$(echo '${{ toJSON(github.event.head_commit.removed) }}' | jq 'length')
             TOTAL=$((NADD+NMOD+NREM))
-            EXTRA=$(jq -n --arg branch "$BRANCH" --arg commit "[\`$SHORT\`]($URL)" \
-              --arg changes "+$NADD ~$NMOD -$NREM ($TOTAL files)" \
-              '[{name:"Branch",value:$branch,inline:true},
-                {name:"Commit",value:$commit,inline:true},
-                {name:"Changes",value:$changes,inline:true}]')
+            if [ "$TOTAL" -gt 0 ]; then
+              EXTRA=$(jq -n --arg branch "$BRANCH" --arg commit "[\`$SHORT\`]($URL)" \
+                --arg changes "+$NADD ~$NMOD -$NREM" \
+                '[{name:"Branch",value:$branch,inline:true},
+                  {name:"Commit",value:$commit,inline:true},
+                  {name:"Changes",value:$changes,inline:true}]')
+            else
+              EXTRA=$(jq -n --arg branch "$BRANCH" --arg commit "[\`$SHORT\`]($URL)" \
+                '[{name:"Branch",value:$branch,inline:true},
+                  {name:"Commit",value:$commit,inline:true}]')
+            fi
           fi
 
           DESC="$ABOUT"
@@ -68,20 +75,20 @@ jobs:
             --arg desc "$DESC" \
             --arg repo "$REPO" \
             --arg reponame "$REPONAME" \
-            --arg avatar "$AVATAR" \
             --arg meta "$META" \
+            --arg thumb "$THUMB" \
             --argjson color "$COLOR" \
             --argjson extra "$EXTRA" \
             '{
               embeds: [ {
-                author: {name: $reponame, url: ("https://github.com/" + $repo), icon_url: $avatar},
+                author: {name: $reponame, url: ("https://github.com/" + $repo)},
                 title: $title,
                 url: $url,
-                description: $desc,
+                description: (if $desc == "" then null else $desc end),
                 color: $color,
                 fields: $extra,
-                thumbnail: {url: $avatar},
-                footer: {text: ($repo + (if $meta != "" then "  —  " + $meta else "" end))},
+                thumbnail: {url: $thumb},
+                footer: {text: ($repo + (if $meta != "" then "  •  " + $meta else "" end))},
                 timestamp: (now | todateiso8601)
               } ]
             }' \
