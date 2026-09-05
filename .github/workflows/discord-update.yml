@@ -23,23 +23,29 @@ jobs:
           HOMEPAGE="${{ github.event.repository.homepage }}"
           LANG="${{ github.event.repository.language }}"
           DEFBRANCH="${{ github.event.repository.default_branch }}"
-          ACTOR="${{ github.actor }}"
           BRANCH="${{ github.ref_name }}"
-          COLOR=1975599
 
+          # per-repo logo (author icon + thumbnail); Discord drops it silently if absent
           THUMB="https://raw.githubusercontent.com/$REPO/$DEFBRANCH/.github/logo.png"
 
+          # event-type accent colours (bright, brand-aligned)
+          #   commit  = Hex lime  #c6f73a = 13039418
+          #   release = green     #3ba55d = 3908957
+          #   tag     = amber     #faa61a = 16426522
           if [ "$EVENT" = "release" ]; then
             TITLE="Release ${{ github.event.release.tag_name }}"
             URL="${{ github.event.release.html_url }}"
             BODY=$(echo "${{ github.event.release.body }}" | head -c 1500)
             EXTRA='[]'
+            COLOR=3908957
           elif [ "$EVENT" = "create" ] && [ "${{ github.event.ref_type }}" = "tag" ]; then
             TITLE="Tagged ${{ github.event.ref }}"
             URL="https://github.com/$REPO/releases/tag/${{ github.event.ref }}"
             BODY=""
             EXTRA='[]'
+            COLOR=16426522
           else
+            COLOR=13039418
             SHA="${{ github.event.head_commit.id }}"; SHORT="${SHA:0:7}"
             TITLE=$(echo "${{ github.event.head_commit.message }}" | head -1 | head -c 200)
             URL="${{ github.event.head_commit.url }}"; BODY=""
@@ -81,7 +87,7 @@ jobs:
             --argjson extra "$EXTRA" \
             '{
               embeds: [ {
-                author: {name: $reponame, url: ("https://github.com/" + $repo)},
+                author: {name: $reponame, url: ("https://github.com/" + $repo), icon_url: $thumb},
                 title: $title,
                 url: $url,
                 description: (if $desc == "" then null else $desc end),
