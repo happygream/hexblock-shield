@@ -8,7 +8,7 @@
  * - Listen for declarativeNetRequest rule match events
  */
 
-import { getSettings, setSettings, getStats, incrementBlocked } from './storage.js';
+import { getSettings, setSettings, getStats, incrementBlocked, addLogEntry } from './storage.js';
 
 // ── Block counter ─────────────────────────────────────────────
 // Uses Chrome's native declarativeNetRequest action count for the toolbar
@@ -102,7 +102,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
         hb_update_notice: {
           version,
           previousVersion: details.previousVersion || null,
-          note: 'New in this version: a full options page and a live block counter. Open the popup and click Options in the footer to explore your settings.',
+          note: 'The activity log now shows what Shield does on each page: ad elements hidden, sponsor segments skipped, and Twitch ads stripped.',
           ts: Date.now(),
           seen: false,
         },
@@ -147,6 +147,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 
     case 'BLOCK_EVENT':
       incrementBlocked(sender.tab?.id).then(() => sendResponse({ ok: true }));
+      if (sender.tab?.id) {
+        addLogEntry(sender.tab.id, { type: 'blocked', domain: msg.domain || msg.resource || 'ad / tracker' });
+        bumpDailyCount(1);
+      }
       return true;
 
     case 'SEGMENT_SKIPPED':
@@ -232,6 +236,7 @@ async function handleTwitchAdStripped(tabId, count, seconds) {
   stats.segmentsSkipped    = (stats.segmentsSkipped    || 0) + count;
   stats.secondsSaved       = (stats.secondsSaved       || 0) + seconds;
   await chrome.storage.session.set({ [`stats_${tabId}`]: stats });
+  addLogEntry(tabId, { type: 'skipped', domain: 'Twitch ad' + (count > 1 ? ' \u00d7' + count : '') });
 }
 
 // ── Segment skip tracking ─────────────────────────────────────
@@ -242,6 +247,7 @@ async function handleSegmentSkipped(tabId, segment) {
   stats.segmentsSkipped = (stats.segmentsSkipped || 0) + 1;
   stats.secondsSaved    = (stats.secondsSaved    || 0) + (segment?.duration || 0);
   await chrome.storage.session.set({ [`stats_${tabId}`]: stats });
+  addLogEntry(tabId, { type: 'skipped', domain: 'SponsorBlock: ' + (segment?.category || 'segment') });
   reportToGateway(segment?.videoId, 'skipped', tabId);
 }
 

@@ -53,16 +53,29 @@ async function run() {
 }
 
 function hideElements() {
+  let hidden = 0;
   for (const selector of COSMETIC_SELECTORS) {
     try {
       document.querySelectorAll(selector).forEach(el => {
         if (el.style.display !== 'none') {
           el.style.setProperty('display', 'none', 'important');
+          hidden++;
         }
       });
     } catch (_) {
       // Invalid selector in some browser versions — skip it
     }
+  }
+  // Report newly-hidden ad elements so they appear in the activity log
+  // and the daily counter. Only fires when something new was actually hidden.
+  if (hidden > 0) {
+    try {
+      chrome.runtime.sendMessage({
+        type: 'BLOCK_EVENT',
+        domain: location.hostname.replace(/^www\./, ''),
+        resource: hidden > 1 ? ('ad elements \u00d7' + hidden) : 'ad element',
+      });
+    } catch (_) {}
   }
 }
 

@@ -5,6 +5,14 @@ All notable changes to HexBlock Shield are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] — 2026-09-11
+
+### Fixed
+- **Activity log now populates.** The per-tab log was previously never fed and always showed "no entries". It now records observable activity: ad elements hidden by cosmetic filtering, SponsorBlock segments skipped, and Twitch ads stripped. Renamed from "Request log" to "Activity" to reflect what it shows. The "blocked today" counter is now fed by the same events.
+
+### Notes
+- Network-level blocks (declarativeNetRequest) are counted on the toolbar badge; the activity log and daily counter reflect JS-observable actions, which don't require extra permissions.
+
 ## [1.4.0] — 2026-09-11
 
 ### Added
