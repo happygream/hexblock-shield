@@ -1,0 +1,69 @@
+name: Validate filter rules
+
+on:
+  push:
+    branches: ["**"]
+    paths:
+      - 'lists/**'
+      - 'scripts/**'
+      - 'tools/**'
+      - '.github/workflows/validate-rules.yml'
+  pull_request:
+    paths:
+      - 'lists/**'
+      - 'scripts/**'
+      - 'tools/**'
+
+jobs:
+  frame-safety:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if any block rule targets a frame
+        run: |
+          python3 - <<'EOF'
+          import json, glob, sys
+
+          bad = []
+          empty = []
+          total_block = 0
+
+          for f in sorted(glob.glob('lists/*.json')):
+              try:
+                  rules = json.load(open(f))
+              except Exception as e:
+                  print(f"::error file={f}::invalid JSON: {e}")
+                  sys.exit(1)
+              for r in rules:
+                  if r.get('action', {}).get('type') != 'block':
+                      continue
+                  total_block += 1
+                  rts = r.get('condition', {}).get('resourceTypes')
+                  if not rts:
+                      empty.append((f, r.get('id')))
+                  elif 'main_frame' in rts or 'sub_frame' in rts:
+                      bad.append((f, r.get('id'), rts))
+
+          ok = True
+          if bad:
+              ok = False
+              print("::error::Block rules targeting main_frame/sub_frame found "
+                    "(these break whole sites and legit embeds):")
+              for f, rid, rts in bad[:25]:
+                  print(f"  {f} rule {rid}: {rts}")
+              if len(bad) > 25:
+                  print(f"  ...and {len(bad)-25} more")
+
+          if empty:
+              ok = False
+              print("::error::Block rules with empty/missing resourceTypes "
+                    "(these match ALL types including main_frame):")
+              for f, rid in empty[:25]:
+                  print(f"  {f} rule {rid}")
+
+          if not ok:
+              sys.exit(1)
+
+          print(f"OK — {total_block} block rules, all frame-safe.")
+          EOF

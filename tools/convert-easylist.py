@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# NOTE: Reference implementation. The canonical build is scripts/build-lists.js
+# (run via `npm run build:lists`). This Python version mirrors its logic and is
+# kept for reference / non-Node environments. Both produce frame-safe output.
 """
 HexBlock Shield — EasyList / EasyPrivacy -> declarativeNetRequest converter.
 
