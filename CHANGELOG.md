@@ -5,6 +5,15 @@ All notable changes to HexBlock Shield are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] — 2026-09-11
+
+### Added
+- **Block counter.** The toolbar icon shows a live count of blocked requests per tab (Chrome's native declarativeNetRequest count — accurate, no new permissions). The popup shows a persistent "blocked today" total.
+- **Options page.** A full settings page (opens in its own tab) with all protection toggles, YouTube/SponsorBlock controls, Twitch handling, gateway integration, and a per-site allowlist manager. Reachable via the "Options" link in the popup footer.
+
+### Notes
+- No new permissions requested.
+
 ## [1.3.1] — 2026-08-17
 
 ### Fixed

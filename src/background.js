@@ -10,6 +10,36 @@
 
 import { getSettings, setSettings, getStats, incrementBlocked } from './storage.js';
 
+// ── Block counter ─────────────────────────────────────────────
+// Uses Chrome's native declarativeNetRequest action count for the toolbar
+// badge (accurate, no extra permission). A persistent daily total is kept in
+// chrome.storage.local, incremented from the per-tab matched counts.
+async function enableBadgeCount() {
+  try {
+    await chrome.declarativeNetRequest.setExtensionActionOptions({
+      displayActionCountAsBadgeText: true,
+    });
+    await chrome.action.setBadgeBackgroundColor({ color: '#00d4aa' });
+  } catch (_) {}
+}
+
+async function bumpDailyCount(n) {
+  if (!n) return;
+  const today = new Date().toISOString().slice(0, 10);
+  const { hb_daily } = await chrome.storage.local.get('hb_daily');
+  let d = hb_daily;
+  if (!d || d.date !== today) d = { date: today, count: 0 };
+  d.count += n;
+  await chrome.storage.local.set({ hb_daily: d });
+}
+
+async function getDailyCount() {
+  const today = new Date().toISOString().slice(0, 10);
+  const { hb_daily } = await chrome.storage.local.get('hb_daily');
+  if (!hb_daily || hb_daily.date !== today) return 0;
+  return hb_daily.count || 0;
+}
+
 // ── Other blocker detection ───────────────────────────────────
 // If uBlock Origin or similar is active, disable our EasyList/EasyPrivacy
 // rules to avoid conflicts. User's existing blocker handles it better.
@@ -72,22 +102,20 @@ chrome.runtime.onInstalled.addListener(async (details) => {
         hb_update_notice: {
           version,
           previousVersion: details.previousVersion || null,
-          note: 'Fixed sites being blocked by mistake — full pages and embeds (videos, comments, payment frames) now load correctly while ads stay blocked.',
+          note: 'New in this version: a full options page and a live block counter. Open the popup and click Options in the footer to explore your settings.',
           ts: Date.now(),
           seen: false,
         },
       });
-      // Badge cue so the user notices there's something new in the popup.
-      try {
-        await chrome.action.setBadgeText({ text: 'NEW' });
-        await chrome.action.setBadgeBackgroundColor({ color: '#00d4aa' });
-      } catch (_) {}
+      // (Update is surfaced via the popup banner; the toolbar badge is
+      // reserved for the live block count.)
     }
   }
+  enableBadgeCount();
   checkForOtherBlockers();
 });
 
-chrome.runtime.onStartup.addListener(checkForOtherBlockers);
+chrome.runtime.onStartup.addListener(() => { enableBadgeCount(); checkForOtherBlockers(); });
 
 // ── Block event counting ──────────────────────────────────────
 // Note: onRuleMatchedDebug requires declarativeNetRequestFeedback permission
@@ -100,6 +128,10 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   switch (msg.type) {
     case 'GET_STATS':
       getStats(msg.tabId).then(sendResponse);
+      return true;
+
+    case 'GET_DAILY_COUNT':
+      getDailyCount().then(c => sendResponse({ count: c }));
       return true;
 
     case 'GET_SETTINGS':

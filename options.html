@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HexBlock Shield — Options</title>
+<style>
+:root{
+  --bg:#06090d; --s1:#10161e; --s2:#161e28; --s3:#1e2937;
+  --line:rgba(255,255,255,.07); --line2:rgba(255,255,255,.11);
+  --acc:#00d4aa; --adim:rgba(0,212,170,.10);
+  --red:#ff4d63; --rdim:rgba(255,77,99,.11);
+  --text:#e6edf3; --muted:#7d93a6; --dim:#4a5b6b;
+  --mono:ui-monospace,'IBM Plex Mono','SF Mono',Menlo,Consolas,monospace;
+  --sans:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --r:14px;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;-webkit-font-smoothing:antialiased;line-height:1.5;}
+body::before{content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(600px circle at 15% 8%,rgba(0,212,170,.05),transparent 42%),radial-gradient(700px circle at 85% 92%,rgba(77,159,255,.04),transparent 44%);}
+.wrap{position:relative;z-index:1;max-width:680px;margin:0 auto;padding:48px 24px 80px;}
+.head{display:flex;align-items:center;gap:12px;margin-bottom:8px;}
+.logo{width:30px;height:30px;flex-shrink:0;}
+.title{font-family:var(--mono);font-weight:600;font-size:20px;}
+.title span{color:var(--acc);}
+.ver{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto;}
+.sub{font-size:14px;color:var(--muted);margin-bottom:32px;}
+
+.card{background:var(--s1);border:1px solid var(--line);border-radius:var(--r);margin-bottom:16px;overflow:hidden;box-shadow:0 18px 40px -24px rgba(0,0,0,.7);}
+.card-head{padding:15px 20px;border-bottom:1px solid var(--line);font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);}
+.card-body{padding:8px 20px;}
+
+.row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);}
+.row:last-child{border-bottom:none;}
+.row-main{flex:1;}
+.row-name{font-size:14px;font-weight:500;}
+.row-hint{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:2px;line-height:1.5;}
+.row.sub-row{padding-left:16px;}
+.row.sub-row .row-name{font-size:13px;font-weight:400;color:var(--muted);}
+
+.tog{width:38px;height:21px;background:var(--acc);border-radius:9999px;position:relative;cursor:pointer;flex-shrink:0;transition:background .18s;border:none;padding:0;}
+.tog.off{background:var(--s3);}
+.tog::after{content:'';position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:#fff;transition:transform .18s cubic-bezier(.32,.72,0,1);}
+.tog:not(.off)::after{transform:translateX(17px);}
+
+.inp{width:100%;background:var(--s2);border:1px solid var(--line2);border-radius:9px;padding:10px 13px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border .15s;}
+.inp:focus{border-color:var(--acc);}
+.inp::placeholder{color:var(--dim);}
+.field{padding:14px 0;border-bottom:1px solid var(--line);}
+.field:last-child{border-bottom:none;}
+.field-lbl{font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;}
+
+/* allowlist */
+.al-add{display:flex;gap:8px;padding:14px 0;}
+.btn{font-family:var(--mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;padding:10px 16px;border-radius:9px;cursor:pointer;border:none;background:var(--acc);color:#04110e;font-weight:600;transition:all .15s;white-space:nowrap;}
+.btn:hover{filter:brightness(1.08);}
+.btn.ghost{background:var(--s2);color:var(--muted);border:1px solid var(--line2);}
+.btn.ghost:hover{color:var(--text);}
+.al-list{display:flex;flex-direction:column;}
+.al-item{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);}
+.al-item:last-child{border-bottom:none;}
+.al-host{flex:1;font-family:var(--mono);font-size:13px;color:var(--text);}
+.al-rm{background:none;border:1px solid var(--line2);border-radius:7px;width:28px;height:28px;color:var(--muted);cursor:pointer;transition:all .15s;display:flex;align-items:center;justify-content:center;font-size:15px;}
+.al-rm:hover{color:var(--red);border-color:rgba(255,77,99,.3);}
+.al-empty{font-family:var(--mono);font-size:11px;color:var(--dim);padding:16px 0;text-align:center;}
+
+.foot{text-align:center;margin-top:28px;font-family:var(--mono);font-size:10px;color:var(--dim);letter-spacing:.06em;}
+.saved{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--s1);border:1px solid var(--acc);border-radius:9px;padding:10px 18px;font-family:var(--mono);font-size:11px;color:var(--acc);opacity:0;transition:opacity .3s;z-index:10;pointer-events:none;box-shadow:0 18px 40px -12px rgba(0,0,0,.7);}
+.saved.show{opacity:1;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="head">
+    <svg class="logo" viewBox="0 0 40 46" fill="none"><path d="M20 2L37 11.5V30.5L20 40L3 30.5V11.5L20 2Z" stroke="#00d4aa" stroke-width="2.5" fill="rgba(0,212,170,.07)"/><path d="M20 11L28 15.75V25.25L20 30L12 25.25V15.75L20 11Z" fill="rgba(0,212,170,.2)" stroke="#00d4aa" stroke-width="1.5"/></svg>
+    <div class="title">HexBlock <span>Shield</span> — Options</div>
+    <div class="ver" id="ver"></div>
+  </div>
+  <div class="sub">Configure blocking, streaming, and per-site rules. Changes save automatically.</div>
+
+  <!-- PROTECTION -->
+  <div class="card">
+    <div class="card-head">Protection</div>
+    <div class="card-body">
+      <div class="row"><div class="row-main"><div class="row-name">Ad blocking</div><div class="row-hint">Block ads via EasyList network rules</div></div><button class="tog" data-set="adBlocking"></button></div>
+      <div class="row"><div class="row-main"><div class="row-name">Tracker blocking</div><div class="row-hint">Block trackers and analytics (EasyPrivacy)</div></div><button class="tog" data-set="trackerBlocking"></button></div>
+      <div class="row"><div class="row-main"><div class="row-name">Malware blocking</div><div class="row-hint">Block known malicious domains</div></div><button class="tog" data-set="malwareBlocking"></button></div>
+      <div class="row"><div class="row-main"><div class="row-name">Cosmetic filtering</div><div class="row-hint">Hide leftover ad placeholders and cookie banners</div></div><button class="tog" data-set="cosmeticFiltering"></button></div>
+    </div>
+  </div>
+
+  <!-- YOUTUBE -->
+  <div class="card">
+    <div class="card-head">YouTube &amp; SponsorBlock</div>
+    <div class="card-body">
+      <div class="row"><div class="row-main"><div class="row-name">YouTube ad blocking</div><div class="row-hint">Skip pre-roll and mid-roll ads</div></div><button class="tog" data-set="youtubeAdBlock"></button></div>
+      <div class="row"><div class="row-main"><div class="row-name">SponsorBlock</div><div class="row-hint">Skip in-video sponsor segments (privacy-preserving)</div></div><button class="tog" data-set="sponsorBlock"></button></div>
+      <div class="row sub-row"><div class="row-main"><div class="row-name">Sponsors</div></div><button class="tog" data-set="sbSponsors"></button></div>
+      <div class="row sub-row"><div class="row-main"><div class="row-name">Intros</div></div><button class="tog" data-set="sbIntros"></button></div>
+      <div class="row sub-row"><div class="row-main"><div class="row-name">Outros</div></div><button class="tog" data-set="sbOutros"></button></div>
+      <div class="row sub-row"><div class="row-main"><div class="row-name">Self-promotion</div></div><button class="tog" data-set="sbSelfPromo"></button></div>
+      <div class="row sub-row"><div class="row-main"><div class="row-name">Subscription reminders</div></div><button class="tog" data-set="sbSubscriptions"></button></div>
+      <div class="row sub-row"><div class="row-main"><div class="row-name">Filler / tangents</div></div><button class="tog" data-set="sbFiller"></button></div>
+    </div>
+  </div>
+
+  <!-- TWITCH -->
+  <div class="card">
+    <div class="card-head">Twitch</div>
+    <div class="card-body">
+      <div class="row"><div class="row-main"><div class="row-name">Twitch ad handling</div><div class="row-hint">Twitch pre-rolls are served with the stream and can't be blocked outright — Shield hides and mutes them so you see a clean screen instead.</div></div><button class="tog" data-set="twitchAdBlock"></button></div>
+    </div>
+  </div>
+
+  <!-- ALLOWLIST -->
+  <div class="card">
+    <div class="card-head">Per-site allowlist</div>
+    <div class="card-body">
+      <div class="row" style="border-bottom:1px solid var(--line);padding-bottom:10px;"><div class="row-main"><div class="row-hint" style="margin-top:0;">Shield is paused on these sites. Add a domain to disable blocking there, or remove one to re-enable it.</div></div></div>
+      <div class="al-add">
+        <input class="inp" id="al-input" placeholder="example.com">
+        <button class="btn" id="al-add-btn">Add</button>
+      </div>
+      <div class="al-list" id="al-list"></div>
+    </div>
+  </div>
+
+  <!-- GATEWAY -->
+  <div class="card">
+    <div class="card-head">HexBlock Gateway (optional)</div>
+    <div class="card-body">
+      <div class="field">
+        <div class="field-lbl">Gateway URL</div>
+        <input class="inp" id="gatewayUrl" placeholder="http://hexblock.local:8080">
+      </div>
+      <div class="row"><div class="row-main"><div class="row-name">Sync blocklists from gateway</div><div class="row-hint">Pull your self-hosted HexBlock lists</div></div><button class="tog" data-set="gatewaySync"></button></div>
+      <div class="row"><div class="row-main"><div class="row-name">Report events to gateway</div><div class="row-hint">Send block events to your dashboard</div></div><button class="tog" data-set="gatewayReport"></button></div>
+      <div class="field">
+        <div class="field-lbl">SponsorBlock API endpoint</div>
+        <input class="inp" id="sbApiEndpoint" placeholder="https://sponsor.ajay.app">
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">HexBlock Shield &middot; settings sync across your signed-in browsers</div>
+</div>
+<div class="saved" id="saved">Saved</div>
+
+<script src="src/options.js"></script>
+</body>
+</html>

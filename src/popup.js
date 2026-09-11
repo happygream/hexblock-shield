@@ -121,6 +121,8 @@ function applySettings() {
 async function loadStats() {
   const s = await msg({ type: 'GET_STATS', tabId: currentTab?.id });
   if (!s) return;
+  const daily = await msg({ type: 'GET_DAILY_COUNT' });
+  if (daily && typeof daily.count === 'number') setText('s-daily', daily.count.toLocaleString());
   setText('s-blocked', s.blocked || 0);
   setText('s-skipped', s.segmentsSkipped || 0);
   const mins = Math.round((s.secondsSaved || 0) / 60);
@@ -287,12 +289,7 @@ function bindTabs() {
   });
 
   document.getElementById('ftr-settings')?.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t =>
-      t.classList.toggle('active', t.dataset.tab === 'settings')
-    );
-    document.querySelectorAll('.panel').forEach(p =>
-      p.classList.toggle('active', p.id === 'panel-settings')
-    );
+    if (chrome.runtime.openOptionsPage) chrome.runtime.openOptionsPage();
   });
 }
 

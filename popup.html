@@ -141,6 +141,9 @@ body {
 .tog:not(.off)::after { transform: translateX(16px); }
 
 /* Stats */
+.daily { display: flex; align-items: baseline; gap: 7px; padding: 10px 14px 2px; }
+.daily-val { font-family: var(--mono); font-size: 22px; font-weight: 600; color: var(--acc); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.daily-lbl { font-family: var(--mono); font-size: 10px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; }
 .stats {
   display: grid; grid-template-columns: repeat(3,1fr);
   border-top: 1px solid var(--line);
@@ -338,8 +341,12 @@ body {
 </div>
 
 <!-- Stats -->
+<div class="daily" id="daily-row">
+  <span class="daily-val" id="s-daily">0</span>
+  <span class="daily-lbl">blocked today</span>
+</div>
 <div class="stats">
-  <div class="sc"><div class="sc-val g" id="s-blocked">0</div><div class="sc-lbl">Blocked</div></div>
+  <div class="sc"><div class="sc-val g" id="s-blocked">0</div><div class="sc-lbl">This tab</div></div>
   <div class="sc"><div class="sc-val y" id="s-skipped">0</div><div class="sc-lbl">Skipped</div></div>
   <div class="sc"><div class="sc-val"   id="s-saved">0m</div><div class="sc-lbl">Saved</div></div>
 </div>
@@ -518,7 +525,7 @@ body {
 <!-- Footer -->
 <div class="ftr">
   <span class="ftr-left" id="ftr-ver">HexBlock Shield</span>
-  <span class="ftr-link" id="ftr-settings">Settings</span>
+  <span class="ftr-link" id="ftr-settings">Options</span>
 </div>
 
 <script src="src/popup.js"></script>
