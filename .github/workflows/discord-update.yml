@@ -20,32 +20,25 @@ jobs:
           REPO="${{ github.repository }}"
           REPONAME="${{ github.event.repository.name }}"
           ABOUT=$(echo "${{ github.event.repository.description }}" | head -c 300)
+          [ -z "$ABOUT" ] && ABOUT="_no description set_"
           HOMEPAGE="${{ github.event.repository.homepage }}"
           LANG="${{ github.event.repository.language }}"
-          DEFBRANCH="${{ github.event.repository.default_branch }}"
+          ACTOR="${{ github.actor }}"
+          AVATAR="https://github.com/${ACTOR}.png?size=64"
           BRANCH="${{ github.ref_name }}"
+          COLOR=1975599
 
-          # per-repo logo (author icon + thumbnail); Discord drops it silently if absent
-          THUMB="https://raw.githubusercontent.com/$REPO/$DEFBRANCH/.github/logo.png"
-
-          # event-type accent colours (bright, brand-aligned)
-          #   commit  = Hex lime  #c6f73a = 13039418
-          #   release = green     #3ba55d = 3908957
-          #   tag     = amber     #faa61a = 16426522
           if [ "$EVENT" = "release" ]; then
             TITLE="Release ${{ github.event.release.tag_name }}"
             URL="${{ github.event.release.html_url }}"
             BODY=$(echo "${{ github.event.release.body }}" | head -c 1500)
             EXTRA='[]'
-            COLOR=3908957
           elif [ "$EVENT" = "create" ] && [ "${{ github.event.ref_type }}" = "tag" ]; then
             TITLE="Tagged ${{ github.event.ref }}"
             URL="https://github.com/$REPO/releases/tag/${{ github.event.ref }}"
             BODY=""
             EXTRA='[]'
-            COLOR=16426522
           else
-            COLOR=13039418
             SHA="${{ github.event.head_commit.id }}"; SHORT="${SHA:0:7}"
             TITLE=$(echo "${{ github.event.head_commit.message }}" | head -1 | head -c 200)
             URL="${{ github.event.head_commit.url }}"; BODY=""
@@ -53,17 +46,11 @@ jobs:
             NMOD=$(echo '${{ toJSON(github.event.head_commit.modified) }}' | jq 'length')
             NREM=$(echo '${{ toJSON(github.event.head_commit.removed) }}' | jq 'length')
             TOTAL=$((NADD+NMOD+NREM))
-            if [ "$TOTAL" -gt 0 ]; then
-              EXTRA=$(jq -n --arg branch "$BRANCH" --arg commit "[\`$SHORT\`]($URL)" \
-                --arg changes "+$NADD ~$NMOD -$NREM" \
-                '[{name:"Branch",value:$branch,inline:true},
-                  {name:"Commit",value:$commit,inline:true},
-                  {name:"Changes",value:$changes,inline:true}]')
-            else
-              EXTRA=$(jq -n --arg branch "$BRANCH" --arg commit "[\`$SHORT\`]($URL)" \
-                '[{name:"Branch",value:$branch,inline:true},
-                  {name:"Commit",value:$commit,inline:true}]')
-            fi
+            EXTRA=$(jq -n --arg branch "$BRANCH" --arg commit "[\`$SHORT\`]($URL)" \
+              --arg changes "+$NADD ~$NMOD -$NREM ($TOTAL files)" \
+              '[{name:"Branch",value:$branch,inline:true},
+                {name:"Commit",value:$commit,inline:true},
+                {name:"Changes",value:$changes,inline:true}]')
           fi
 
           DESC="$ABOUT"
@@ -81,20 +68,20 @@ jobs:
             --arg desc "$DESC" \
             --arg repo "$REPO" \
             --arg reponame "$REPONAME" \
+            --arg avatar "$AVATAR" \
             --arg meta "$META" \
-            --arg thumb "$THUMB" \
             --argjson color "$COLOR" \
             --argjson extra "$EXTRA" \
             '{
               embeds: [ {
-                author: {name: $reponame, url: ("https://github.com/" + $repo), icon_url: $thumb},
+                author: {name: $reponame, url: ("https://github.com/" + $repo), icon_url: $avatar},
                 title: $title,
                 url: $url,
-                description: (if $desc == "" then null else $desc end),
+                description: $desc,
                 color: $color,
                 fields: $extra,
-                thumbnail: {url: $thumb},
-                footer: {text: ($repo + (if $meta != "" then "  •  " + $meta else "" end))},
+                thumbnail: {url: $avatar},
+                footer: {text: ($repo + (if $meta != "" then "  —  " + $meta else "" end))},
                 timestamp: (now | todateiso8601)
               } ]
             }' \
