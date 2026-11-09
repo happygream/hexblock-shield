@@ -5,6 +5,15 @@ All notable changes to HexBlock Shield are documented here.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.2] — 2026-11-09
+
+### Fixed
+- **Private networks are never blocked.** Generic EasyPrivacy path rules (for example `/api/v1/metrics`, `/frontend-metrics`) were blocking first-party API calls from internal tools such as Grafana dashboards. Requests to localhost, RFC 1918 and link-local addresses, ULA IPv6, and `.local`, `.lan`, `.internal`, `.intranet`, `.corp` and `.home.arpa` hosts are now always allowed.
+- **"Pause on this site" now works.** Paused hostnames were saved but never applied to network blocking. Each paused site now gets a dynamic `allowAllRequests` rule, synced on change, install and browser start. Reload the tab after pausing.
+
+### Added
+- `scripts/package.py` builds store-ready zips for Chrome, Edge and Firefox into `dist/`. The Firefox build uses `background.scripts` and requires Firefox 115 or later. All builds drop the redundant default rule priority so `filters.json` stays under the Firefox Add-ons 5 MB lint limit.
+
 ## [1.4.1] — 2026-09-11
 
 ### Fixed
