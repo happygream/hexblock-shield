@@ -67,6 +67,51 @@ async function checkForOtherBlockers() {
   } catch(_) {}
 }
 
+// ── Paused sites ──────────────────────────────────────────────
+// The popup and options page store paused hostnames in
+// chrome.storage.sync (hb_paused_sites). Each one becomes a dynamic
+// allowAllRequests rule so every request made by that site's pages is
+// exempt from the static rulesets. Dynamic rule IDs 900000+ are reserved
+// for this.
+
+const PAUSE_RULE_BASE = 900000;
+const PAUSE_RULE_MAX  = 1000;
+
+async function syncPausedRules() {
+  try {
+    const res   = await chrome.storage.sync.get('hb_paused_sites');
+    const sites = (res['hb_paused_sites'] || [])
+      .filter(h => typeof h === 'string' && h.length > 0)
+      .slice(0, PAUSE_RULE_MAX);
+
+    const existing  = await chrome.declarativeNetRequest.getDynamicRules();
+    const removeIds = existing
+      .filter(r => r.id >= PAUSE_RULE_BASE && r.id < PAUSE_RULE_BASE + PAUSE_RULE_MAX)
+      .map(r => r.id);
+
+    const addRules = sites.map((host, i) => ({
+      id:       PAUSE_RULE_BASE + i,
+      priority: 200,
+      action:   { type: 'allowAllRequests' },
+      condition: {
+        requestDomains: [host],
+        resourceTypes:  ['main_frame', 'sub_frame'],
+      },
+    }));
+
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: removeIds,
+      addRules,
+    });
+  } catch (err) {
+    console.error('HexBlock Shield: failed to sync paused sites', err);
+  }
+}
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area === 'sync' && 'hb_paused_sites' in changes) syncPausedRules();
+});
+
 // ── Startup ───────────────────────────────────────────────────
 
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -113,9 +158,10 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   }
   enableBadgeCount();
   checkForOtherBlockers();
+  syncPausedRules();
 });
 
-chrome.runtime.onStartup.addListener(() => { enableBadgeCount(); checkForOtherBlockers(); });
+chrome.runtime.onStartup.addListener(() => { enableBadgeCount(); checkForOtherBlockers(); syncPausedRules(); });
 
 // ── Block event counting ──────────────────────────────────────
 // Note: onRuleMatchedDebug requires declarativeNetRequestFeedback permission
