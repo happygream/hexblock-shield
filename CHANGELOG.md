@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Private networks are never blocked.** Generic EasyPrivacy path rules (for example `/api/v1/metrics`, `/frontend-metrics`) were blocking first-party API calls from internal tools such as Grafana dashboards. Requests to localhost, RFC 1918 and link-local addresses, ULA IPv6, and `.local`, `.lan`, `.internal`, `.intranet`, `.corp` and `.home.arpa` hosts are now always allowed.
+- Removed the unused `scripting` and `tabs` permissions. Tab URLs are already readable through the existing host permissions.
 - **"Pause on this site" now works.** Paused hostnames were saved but never applied to network blocking. Each paused site now gets a dynamic `allowAllRequests` rule, synced on change, install and browser start. Reload the tab after pausing.
 
 ### Added
